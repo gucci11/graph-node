@@ -43,7 +43,7 @@ mock! {
 
         fn block_number(&self, block_hash: H256) -> Result<Option<(String, BlockNumber)>, StoreError>;
 
-        fn transaction_receipts_in_block(&self, block_hash: &H256) -> Result<Vec<transaction_receipt::LightTransactionReceipt>, StoreError>;
+        async fn transaction_receipts_in_block(&self, block_hash: &H256) -> Result<Vec<transaction_receipt::LightTransactionReceipt>, StoreError>;
 
     }
 }

@@ -1300,7 +1300,7 @@ pub trait ChainStore: Send + Sync + 'static {
     fn block_number(&self, block_hash: H256) -> Result<Option<(String, BlockNumber)>, StoreError>;
 
     /// Tries to retrieve all transactions receipts for a given block.
-    fn transaction_receipts_in_block(
+    async fn transaction_receipts_in_block(
         &self,
         block_ptr: &H256,
     ) -> Result<Vec<transaction_receipt::LightTransactionReceipt>, StoreError>;

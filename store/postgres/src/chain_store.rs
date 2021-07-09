@@ -1433,14 +1433,20 @@ impl ChainStoreTrait for ChainStore {
             .map(|number| (self.chain.clone(), number)))
     }
 
-    fn transaction_receipts_in_block(
+    async fn transaction_receipts_in_block(
         &self,
         block_hash: &H256,
     ) -> Result<Vec<LightTransactionReceipt>, StoreError> {
-        let conn = self.get_conn()?;
-        self.storage
-            .find_transaction_receipts_in_block(&conn, &self.chain, &block_hash)
-            .map_err(|e| e.into())
+        let pool = self.pool.clone();
+        let storage = self.storage.clone();
+        let chain = self.chain.clone();
+        let block_hash = block_hash.clone();
+        pool.with_conn(move |conn, _| {
+            storage
+                .find_transaction_receipts_in_block(&conn, &chain, &block_hash)
+                .map_err(|e| StoreError::from(e).into())
+        })
+        .await
     }
 }
 

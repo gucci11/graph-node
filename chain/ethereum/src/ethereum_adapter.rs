@@ -1715,7 +1715,8 @@ async fn filter_call_triggers_from_unsuccessful_transactions(
     // We'll also need the receipts for those transactions. In this step we collect all receipts
     // we have in store for the current block.
     let mut receipts = chain_store
-        .transaction_receipts_in_block(&block.ptr().hash_as_h256())?
+        .transaction_receipts_in_block(&block.ptr().hash_as_h256())
+        .await?
         .into_iter()
         .map(|receipt| (receipt.transaction_hash.clone(), receipt))
         .collect::<BTreeMap<H256, LightTransactionReceipt>>();
