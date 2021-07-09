@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::{convert::TryFrom, sync::Arc};
 use web3::types::{
     Action, Address, Block, Bytes, Log, Res, Trace, Transaction, TransactionReceipt, H256, U256,
+    U64,
 };
 
 use crate::{
@@ -91,15 +92,26 @@ impl EthereumBlockWithCalls {
                 "failed to find the transaction for this call"
             ))?;
 
-        // assume the transaction failed if all gas was used
-        if receipt
-            .gas_used
-            .ok_or(anyhow::anyhow!("Running in light client mode)"))?
-            >= transaction.gas
-        {
-            return Ok(false);
-        }
-        Ok(matches!(receipt.status, Some(x) if x == web3::types::U64::from(1)))
+        evaluate_transaction_status(receipt.status, receipt.gas_used, &transaction.gas)
+    }
+}
+
+/// Evaluates if a given transaction was successful.
+///
+/// According to EIP-658, there are two ways of checking if a transaction failed:
+/// 1. by checking if it ran out of gas.
+/// 2. by looking at its receipt "status" boolean field, which may be absent for blocks before
+///    Byzantium fork.
+pub fn evaluate_transaction_status(
+    receipt_status: Option<U64>,
+    receipt_gas_used: Option<U256>,
+    transaction_gas: &U256,
+) -> anyhow::Result<bool> {
+    if receipt_gas_used.ok_or(anyhow::anyhow!("Running in light client mode)"))? >= *transaction_gas
+    {
+        Ok(false)
+    } else {
+        Ok(matches!(receipt_status, Some(status) if !status.is_zero()))
     }
 }
 

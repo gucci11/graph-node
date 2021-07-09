@@ -13,7 +13,7 @@ use crate::{
         metrics::stopwatch::StopwatchMetrics,
         store::{DeploymentLocator, StoredDynamicDataSource},
     },
-    data::subgraph::{Mapping, Source, TemplateSource, UnifiedMappingApiVersion},
+    data::subgraph::{Mapping, Source, UnifiedMappingApiVersion},
     prelude::DataSourceContext,
     runtime::{AscHeap, AscPtr, DeterministicHostError, HostExportError},
 };

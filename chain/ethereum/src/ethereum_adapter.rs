@@ -1752,7 +1752,7 @@ async fn filter_call_triggers_from_unsuccessful_transactions(
     for (transaction, receipt) in receipts_and_transactions.into_iter() {
         transaction_success.insert(
             &transaction.hash,
-            is_transaction_successful(&transaction, &receipt)?,
+            evaluate_transaction_status(receipt.status, receipt.gas_used, &transaction.gas)?,
         );
     }
 
@@ -1775,24 +1775,4 @@ async fn filter_call_triggers_from_unsuccessful_transactions(
         }
     });
     Ok(block)
-}
-
-/// Evaluates if a given transaction was successful.
-///
-/// According to EIP-658, there are two ways of checking if a transaction failed:
-/// 1. by checking if it ran out of gas.
-/// 2. by looking at its receipt "status" boolean field, which may be absent for blocks before
-///    Byzantium fork.
-fn is_transaction_successful(
-    transaction: &Transaction,
-    receipt: &LightTransactionReceipt,
-) -> anyhow::Result<bool> {
-    if let Some(status) = receipt.is_sucessful() {
-        Ok(status)
-    } else {
-        let gas_used = receipt
-            .gas_used
-            .ok_or(anyhow::anyhow!("Running in light client mode"))?;
-        Ok(gas_used >= transaction.gas)
-    }
 }

@@ -110,16 +110,6 @@ pub struct LightTransactionReceipt {
     pub status: Option<U64>,
 }
 
-impl LightTransactionReceipt {
-    /// `0x0` indicates transaction failure, `0x1` indicates transaction success.
-    /// Set for blocks mined after Byzantium hard fork, `None` before.
-    ///
-    /// Relevant EIPs: 609, 658
-    pub fn is_sucessful(&self) -> Option<bool> {
-        self.status.map(|status| !status.is_zero())
-    }
-}
-
 /// Converts Vec<u8> to [u8; N], where N is the vector's expected lenght.
 /// Fails if input size is larger than output size.
 pub(crate) fn drain_vector<const N: usize>(input: Vec<u8>) -> Result<[u8; N], anyhow::Error> {
