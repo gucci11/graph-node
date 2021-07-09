@@ -143,7 +143,7 @@ impl Blockchain for Chain {
         loc: &DeploymentLocator,
         capabilities: &Self::NodeCapabilities,
         unified_api_version: UnifiedMappingApiVersion,
-        stopwatch_metrics: Arc<StopwatchMetrics>,
+        stopwatch_metrics: StopwatchMetrics,
     ) -> Result<Arc<Self::TriggersAdapter>, Error> {
         let eth_adapter = self.eth_adapters.cheapest_with(capabilities)?.clone();
         let logger = self
@@ -189,7 +189,7 @@ impl Blockchain for Chain {
                 &deployment,
                 &requirements,
                 unified_api_version.clone(),
-                Arc::new(metrics.stopwatch.clone()),
+                metrics.stopwatch.clone(),
             )
             .expect(&format!(
                 "no adapter for network {} with capabilities {}",
@@ -338,7 +338,7 @@ impl Manifest<Chain> for DummyManifest {
 pub struct TriggersAdapter {
     logger: Logger,
     ethrpc_metrics: Arc<SubgraphEthRpcMetrics>,
-    stopwatch_metrics: Arc<StopwatchMetrics>,
+    stopwatch_metrics: StopwatchMetrics,
     chain_store: Arc<dyn ChainStore>,
     eth_adapter: Arc<EthereumAdapter>,
     unified_api_version: UnifiedMappingApiVersion,

@@ -1381,7 +1381,7 @@ pub(crate) async fn blocks_with_triggers(
     logger: Logger,
     chain_store: Arc<dyn ChainStore>,
     subgraph_metrics: Arc<SubgraphEthRpcMetrics>,
-    stopwatch_metrics: Arc<StopwatchMetrics>,
+    stopwatch_metrics: StopwatchMetrics,
     from: BlockNumber,
     to: BlockNumber,
     filter: &TriggerFilter,
