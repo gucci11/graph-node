@@ -1678,20 +1678,14 @@ async fn filter_call_triggers_from_unsuccessful_transactions(
     eth: &EthereumAdapter,
     chain_store: &Arc<dyn ChainStore>,
 ) -> anyhow::Result<BlockWithTriggers<crate::Chain>> {
-    // First, we separate call triggers from other trigger types
-    let calls: Vec<&Arc<EthereumCall>> = block
+    // Get the transaction hash from each call trigger
+    let transaction_hashes: BTreeSet<H256> = block
         .trigger_data
         .iter()
         .filter_map(|trigger| match trigger {
-            EthereumTrigger::Call(call_trigger) => Some(call_trigger),
+            EthereumTrigger::Call(call_trigger) => Some(call_trigger.transaction_hash),
             _ => None,
         })
-        .collect();
-
-    // Then we get the transaction hash for each call
-    let transaction_hashes = calls
-        .iter()
-        .map(|call| call.transaction_hash)
         .collect::<Option<BTreeSet<H256>>>()
         .ok_or(anyhow!(
             "failed to obtain transaction hash from call triggers"
@@ -1738,21 +1732,19 @@ async fn filter_call_triggers_from_unsuccessful_transactions(
     }
 
     // When some receipts are missing, we then try to fetch them from our client.
-    if !transactions_without_receipt.is_empty() {
-        let futures = transactions_without_receipt
-            .iter()
-            .map(|transaction| async move {
-                fetch_receipt_from_ethereum_client(&eth, &transaction.hash)
-                    .await
-                    .map(|receipt| (transaction, receipt))
-            });
-        futures03::future::try_join_all(futures.into_iter())
-            .await?
-            .into_iter()
-            .for_each(|(transaction, receipt)| {
-                receipts_and_transactions.push((transaction, receipt.into()))
-            });
-    }
+    let futures = transactions_without_receipt
+        .iter()
+        .map(|transaction| async move {
+            fetch_receipt_from_ethereum_client(&eth, &transaction.hash)
+                .await
+                .map(|receipt| (transaction, receipt))
+        });
+    futures03::future::try_join_all(futures)
+        .await?
+        .into_iter()
+        .for_each(|(transaction, receipt)| {
+            receipts_and_transactions.push((transaction, receipt.into()))
+        });
 
     // With all transactions and receipts in hand, we can evaluate the success of each transaction
     let mut transaction_success: BTreeMap<&H256, bool> = BTreeMap::new();
